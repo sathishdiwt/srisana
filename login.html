@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Parlor desk</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700&family=Figtree:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#F6F2F7;--panel:#fff;--ink:#2A1A2E;--mute:#6E5F73;--line:#E4DCE8;--acc:#7B3F86;--accink:#fff;--ok:#2F7D5B;--warn:#A8501C;--tint:#EFE4F2;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#171019;--panel:#221829;--ink:#F3EAF5;--mute:#B5A6BB;--line:#382A40;--acc:#C58BD0;--accink:#1A0F1D;--ok:#6CCB9F;--warn:#F0A06B;--tint:#33233B;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#171019;--panel:#221829;--ink:#F3EAF5;--mute:#B5A6BB;--line:#382A40;--acc:#C58BD0;--accink:#1A0F1D;--ok:#6CCB9F;--warn:#F0A06B;--tint:#33233B;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;font:15px/1.5 Figtree,system-ui,sans-serif;background:var(--bg);color:var(--ink)}
+h1,h2,.brand{font-family:"Bricolage Grotesque",Figtree,sans-serif;font-weight:700;margin:0}
+h1{font-size:26px}h2{font-size:19px}
+.app{display:grid;grid-template-columns:220px 1fr;min-height:100vh}
+nav{background:var(--panel);border-right:1px solid var(--line);padding:20px 14px;display:flex;flex-direction:column;gap:4px}
+.brand{font-size:20px;padding:0 10px 16px;color:var(--acc)}
+nav a{padding:9px 12px;border-radius:8px;color:var(--ink);text-decoration:none;font-weight:500}
+nav a.on{background:var(--tint);color:var(--acc)}
+main{padding:28px;max-width:860px;width:100%;box-sizing:border-box}
+.bar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:18px;flex-wrap:wrap}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px}
+.stats div{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;color:var(--mute)}
+.stats b{display:block;font:700 26px "Bricolage Grotesque",sans-serif;color:var(--ink)}
+.row{display:grid;grid-template-columns:64px 1fr auto;gap:6px 14px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:10px}
+.tm{font:700 18px "Bricolage Grotesque",sans-serif;color:var(--acc)}
+.who b{display:block}.who span{color:var(--mute);font-size:13px}
+.acts{grid-column:1/-1;display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.chip{font-size:12px;font-weight:600;padding:3px 10px;border-radius:99px;background:var(--tint);color:var(--acc)}
+.chip.paid{background:transparent;color:var(--ok);border:1px solid var(--ok)}
+.chip.svc{color:var(--warn);background:transparent;border:1px solid var(--warn)}
+button,.btn{font:inherit;font-weight:500;padding:7px 13px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--ink);cursor:pointer;text-decoration:none;display:inline-block}
+button.pri{background:var(--acc);color:var(--accink);border-color:var(--acc)}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+label{display:block;font-weight:500;font-size:13px;color:var(--mute);margin-bottom:10px}
+input,select{font:inherit;display:block;width:100%;box-sizing:border-box;margin-top:4px;padding:8px 10px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}
+.chk{display:flex;gap:8px;align-items:center;color:var(--ink)}.chk input{width:auto;margin:0}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:16px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:0 14px}
+.li{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--line)}
+.li:last-child{border:0}.li span{color:var(--mute);font-size:13px}
+.bw{height:10px;background:var(--tint);border-radius:5px;flex:1}.bw i{display:block;height:100%;background:var(--acc);border-radius:5px}
+.empty{color:var(--mute);padding:24px 0}.empty a{color:var(--acc)}
+dialog{border:1px solid var(--line);border-radius:14px;background:var(--panel);color:var(--ink);width:min(380px,92vw);padding:20px}
+dialog::backdrop{background:rgba(0,0,0,.45)}
+.tot{font-size:18px}.tot b{font:700 24px "Bricolage Grotesque",sans-serif;color:var(--acc)}
+#toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:9px 16px;border-radius:8px;opacity:0;transition:opacity .2s;pointer-events:none}
+#toast.on{opacity:1}
+@media(max-width:700px){.app{grid-template-columns:1fr}nav{flex-direction:row;overflow-x:auto;border-right:0;border-bottom:1px solid var(--line);padding:10px}.brand{display:none}nav a{white-space:nowrap}main{padding:18px}.g2{grid-template-columns:1fr}}
+</style></head>
+<body>
+<div class="app"><nav id="nav"></nav><main id="main"></main></div>
+<dialog id="dlg"></dialog><div id="toast" role="status"></div>
+<script>
+const K='parlor_desk_v1';
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid=()=>Math.random().toString(36).slice(2,9);
+const ymd=d=>d.toLocaleDateString('en-CA');
+const money=n=>'$'+Number(n).toFixed(2);
+let S,D=ymd(new Date()),cur=null,sel='';
+try{S=JSON.parse(localStorage.getItem(K))}catch(e){}
+if(!S)S={shop:'Beauty parlor',
+services:[['Haircut',25,45],['Facial',60,60],['Threading',8,15],['Manicure',30,40],['Pedicure',35,50],['Hair colour',90,120],['Bridal makeup',250,90]].map(x=>({id:uid(),name:x[0],price:x[1],mins:x[2]})),
+staff:['Anita','Meena','Priya'].map(n=>({id:uid(),name:n})),customers:[],appts:[]};
+const save=()=>{try{localStorage.setItem(K,JSON.stringify(S))}catch(e){}};
+const cu=i=>S.customers.find(x=>x.id===i),sv=i=>S.services.find(x=>x.id===i),sf=i=>S.staff.find(x=>x.id===i);
+const toast=m=>{const t=document.getElementById('toast');t.textContent=m;t.classList.add('on');setTimeout(()=>t.classList.remove('on'),1800)};
+const wa=(p,t)=>{p=String(p||'').replace(/\D/g,'');if(p.length===8)p='65'+p;return'https://wa.me/'+p+'?text='+encodeURIComponent(t)};
+const ST={booked:'Booked',in:'Checked in',svc:'In service',paid:'Paid'};
+const NX={booked:['Check in','in'],in:['Start service','svc'],svc:['Finish and bill','bill']};
+const opts=(a,sel)=>a.map(x=>`<option value="${x.id}"${x.id===sel?' selected':''}>${esc(x.name)}</option>`).join('');
+const visits=c=>S.appts.filter(a=>a.cust===c.id&&a.st==='paid');
+const NR=/^[STFGM]\d{7}[A-Z]$/;
+const mask=n=>n&&n.length>=5?n[0]+'****'+n.slice(-4):(n||'');
+const norm=s=>String(s||'').toLowerCase().replace(/[\s-]/g,'');
+const found=q=>{q=norm(q);return q?S.customers.filter(c=>norm(c.name).includes(q)||norm(c.phone).includes(q)||norm(c.nric).includes(q)).slice(0,6):[]};
+
+function row(a){
+ const c=cu(a.cust),s=sv(a.svc),f=sf(a.staff),n=NX[a.st],ph=c&&c.phone;
+ const rem=wa(ph,`Hi ${c?c.name:''}, this is ${S.shop}. A reminder of your ${s?s.name:'appointment'} on ${a.date} at ${a.time}. See you soon!`);
+ const rec=wa(ph,`Thank you for visiting ${S.shop}! ${s?s.name:'Service'}: ${money(a.total)} paid by ${a.pm}. Points balance: ${c?c.pts:0}.`);
+ return `<div class="row"><div class="tm">${esc(a.time)}</div>
+ <div class="who"><b>${esc(c?c.name:'Deleted customer')}</b><span>${esc(s?s.name:'Service removed')} with ${esc(f?f.name:'no one')}</span></div>
+ <span class="chip ${a.st}">${ST[a.st]}${a.st==='paid'?' '+money(a.total):''}</span>
+ <div class="acts">${n?`<button class="pri" data-a="${n[1]}" data-id="${a.id}">${n[0]}</button>`:`<a class="btn" href="${rec}" target="_blank" rel="noopener">Send receipt</a>`}
+ ${a.st==='booked'?`<a class="btn" href="${rem}" target="_blank" rel="noopener">Send reminder</a>`:''}
+ ${a.st!=='paid'?`<button data-a="del" data-id="${a.id}">Cancel booking</button>`:''}</div></div>`}
+
+const V={
+today(){
+ const L=S.appts.filter(a=>a.date===D).sort((a,b)=>a.time.localeCompare(b.time));
+ const rev=L.filter(a=>a.st==='paid').reduce((t,a)=>t+a.total,0);
+ return `<div class="bar"><h1>Appointments</h1><input type="date" id="dt" value="${D}" style="width:auto" aria-label="Date"></div>
+ <div class="stats"><div><b>${L.length}</b>booked</div><div><b>${L.filter(a=>a.st!=='paid').length}</b>still to go</div><div><b>${money(rev)}</b>collected</div></div>
+ ${L.length?L.map(row).join(''):'<p class="empty">No appointments on this day. <a href="#book">Book the first one</a></p>'}`},
+book(){
+ return `<div class="bar"><h1>New booking</h1></div><form id="bf" class="card">
+ <label>Find customer by name, phone or NRIC<input id="bq" autocomplete="off" placeholder="Type to search"></label><div id="br"></div>
+ <div class="g2" id="nc"><label>New customer name<input id="bn" autocomplete="off"></label><label>Phone (WhatsApp)<input id="bp" inputmode="tel" placeholder="9123 4567"></label><label>NRIC / FIN<input id="bi" autocomplete="off" maxlength="9" placeholder="S1234567A"></label></div>
+ <div class="g2"><label>Service<select id="bs">${S.services.map(x=>`<option value="${x.id}">${esc(x.name)} — ${money(x.price)}</option>`).join('')}</select></label>
+ <label>Stylist<select id="bt">${opts(S.staff)}</select></label>
+ <label>Date<input type="date" id="bd" value="${D}" required></label><label>Time<input type="time" id="bm" value="10:00" required></label></div>
+ <button class="pri" type="submit">Save booking</button></form>`},
+customers(){
+ return `<div class="bar"><h1>Customers</h1></div><form id="cf" class="card g2">
+ <label>Name<input id="cn" required></label><label>Phone (WhatsApp)<input id="cp" inputmode="tel"></label><label>NRIC / FIN<input id="ci" autocomplete="off" maxlength="9" placeholder="S1234567A"></label>
+ <div><button class="pri" type="submit">Add customer</button></div></form>
+ <div class="card">${S.customers.length?S.customers.map(c=>{const v=visits(c);return `<div class="li"><div><b>${esc(c.name)}</b><br><span>${esc(c.phone||'No phone')} · ${esc(mask(c.nric)||'No NRIC')} · ${v.length} visits · ${money(v.reduce((t,a)=>t+a.total,0))} spent</span></div><div><span class="chip">${c.pts} points</span> <button data-a="delc" data-id="${c.id}">Remove</button></div></div>`}).join(''):'<p class="empty">No customers yet. Add one above, or create one while booking.</p>'}</div>`},
+setup(){
+ return `<div class="bar"><h1>Services and staff</h1></div>
+ <div class="card"><label>Parlor name (shows on receipts)<input id="sn" value="${esc(S.shop)}"></label></div>
+ <div class="card"><h2>Services</h2>${S.services.map(x=>`<div class="li"><div>${esc(x.name)}<br><span>${money(x.price)} · ${x.mins} min</span></div><button data-a="dels" data-id="${x.id}">Remove</button></div>`).join('')}
+ <form id="sf" class="g2" style="margin-top:12px"><label>Service<input id="svn" required></label><label>Price (SGD)<input id="svp" type="number" step="0.01" min="0" required></label><label>Minutes<input id="svm" type="number" min="5" value="30"></label><div style="align-self:end;margin-bottom:10px"><button class="pri" type="submit">Add service</button></div></form></div>
+ <div class="card"><h2>Staff</h2>${S.staff.map(x=>`<div class="li"><div>${esc(x.name)}</div><button data-a="delf" data-id="${x.id}">Remove</button></div>`).join('')}
+ <form id="ff" style="margin-top:12px"><label>Stylist name<input id="fn" required></label><button class="pri" type="submit">Add stylist</button></form></div>`},
+reports(){
+ const P=S.appts.filter(a=>a.st==='paid');
+ const days=[...Array(7)].map((_,i)=>{const d=ymd(new Date(Date.now()-(6-i)*864e5));return[d,P.filter(a=>a.date===d).reduce((t,a)=>t+a.total,0)]});
+ const mx=Math.max(1,...days.map(d=>d[1]));
+ const grp=f=>{const m={};P.forEach(a=>{const k=f(a);m[k]=m[k]||[0,0];m[k][0]++;m[k][1]+=a.total});return Object.entries(m).sort((a,b)=>b[1][1]-a[1][1])};
+ const li=g=>g.length?g.map(([k,v])=>`<div class="li"><div>${esc(k)}<br><span>${v[0]} done</span></div><b>${money(v[1])}</b></div>`).join(''):'<p class="empty">Nothing billed yet.</p>';
+ return `<div class="bar"><h1>Reports</h1><button data-a="copy">Copy weekly summary</button></div>
+ <div class="card"><h2>Last 7 days</h2>${days.map(d=>`<div class="li"><span style="width:84px">${d[0].slice(5)}</span><div class="bw"><i style="width:${d[1]/mx*100}%"></i></div><b style="width:80px;text-align:right">${money(d[1])}</b></div>`).join('')}</div>
+ <div class="g2"><div class="card"><h2>By service</h2>${li(grp(a=>(sv(a.svc)||{name:'Removed'}).name))}</div><div class="card"><h2>By stylist</h2>${li(grp(a=>(sf(a.staff)||{name:'Removed'}).name))}</div></div>`}
+};
+const NAV=[['today','Appointments'],['book','New booking'],['customers','Customers'],['setup','Services and staff'],['reports','Reports']];
+function render(){
+ const v=V[location.hash.slice(1)]?location.hash.slice(1):'today';
+ document.getElementById('nav').innerHTML=`<div class="brand">${esc(S.shop)}</div>`+NAV.map(n=>`<a href="#${n[0]}"${n[0]===v?' class="on"':''}>${n[1]}</a>`).join('');
+ document.getElementById('main').innerHTML=V[v]();
+ sel='';
+}
+function openBill(id){
+ const a=S.appts.find(x=>x.id===id),c=cu(a.cust),s=sv(a.svc);cur=id;
+ document.getElementById('dlg').innerHTML=`<h2>Bill ${esc(c?c.name:'customer')}</h2><p style="color:var(--mute);margin-top:0">${esc(s?s.name:'Service')}</p>
+ <label>Amount (SGD)<input id="amt" type="number" step="0.01" min="0" value="${s?s.price:0}"></label>
+ ${c&&c.pts>=100?`<label class="chk"><input type="checkbox" id="red"> Use 100 points for $5 off (${c.pts} available)</label>`:''}
+ <label>Payment method<select id="pm"><option>Cash</option><option>PayNow</option><option>Card</option></select></label>
+ <p class="tot">Total <b id="tot"></b></p><div class="acts"><button data-a="close">Back</button><button class="pri" data-a="pay">Take payment</button></div>`;
+ calc();document.getElementById('dlg').showModal();
+}
+function calc(){const r=document.getElementById('red');const t=Math.max(0,(parseFloat(document.getElementById('amt').value)||0)-(r&&r.checked?5:0));document.getElementById('tot').textContent=money(t);return t}
+document.getElementById('dlg').addEventListener('input',calc);
+document.addEventListener('click',e=>{
+ const b=e.target.closest('[data-a]');if(!b)return;
+ const a=b.dataset.a,id=b.dataset.id,ap=S.appts.find(x=>x.id===id);
+ if(a==='in'||a==='svc'){ap.st=a;save();render()}
+ else if(a==='bill')openBill(id);
+ else if(a==='close')document.getElementById('dlg').close();
+ else if(a==='pay'){const ap2=S.appts.find(x=>x.id===cur),c=cu(ap2.cust),r=document.getElementById('red'),t=calc();
+  if(c){if(r&&r.checked)c.pts-=100;c.pts+=Math.floor(t)}
+  ap2.total=t;ap2.pm=document.getElementById('pm').value;ap2.st='paid';save();document.getElementById('dlg').close();render();toast('Payment saved')}
+ else if(a==='pick'){const c=cu(id);sel=id;document.getElementById('bq').value=c.name;document.getElementById('br').innerHTML=`<p class="chip" style="display:inline-block">Selected: ${esc(c.name)} · ${esc(c.phone||'No phone')}</p>`;document.getElementById('nc').style.display='none'}
+ else if(a==='del'){S.appts=S.appts.filter(x=>x.id!==id);save();render();toast('Booking cancelled')}
+ else if(a==='delc'){S.customers=S.customers.filter(x=>x.id!==id);save();render()}
+ else if(a==='dels'){S.services=S.services.filter(x=>x.id!==id);save();render()}
+ else if(a==='delf'){S.staff=S.staff.filter(x=>x.id!==id);save();render()}
+ else if(a==='copy'){const P=S.appts.filter(x=>x.st==='paid'&&x.date>=ymd(new Date(Date.now()-6*864e5)));
+  const txt=`${S.shop} — last 7 days\nServices done: ${P.length}\nRevenue: ${money(P.reduce((t,x)=>t+x.total,0))}`;
+  try{navigator.clipboard.writeText(txt).then(()=>toast('Summary copied'),()=>toast('Copy blocked by browser'))}catch(err){toast('Copy blocked by browser')}}
+});
+document.addEventListener('change',e=>{if(e.target.id==='dt'){D=e.target.value||D;render()}if(e.target.id==='sn'){S.shop=e.target.value.trim()||'Beauty parlor';save();render()}});
+document.addEventListener('submit',e=>{
+ e.preventDefault();const f=e.target.id,g=i=>document.getElementById(i).value.trim();
+ if(f==='bf'){
+  let cid=sel;
+  if(!cid){if(!g('bn')){toast('Enter the customer’s name');return}
+   const ni=g('bi').toUpperCase();if(ni&&!NR.test(ni)){toast('NRIC should look like S1234567A');return}
+   if(ni&&S.customers.some(x=>x.nric===ni)){toast('This NRIC already exists. Search for the customer above');return}
+   const c={id:uid(),name:g('bn'),phone:g('bp'),nric:ni,pts:0};S.customers.push(c);cid=c.id}
+  const d=g('bd'),t=g('bm'),st=g('bt');
+  if(S.appts.some(x=>x.date===d&&x.time===t&&x.staff===st&&x.st!=='paid')){toast('That stylist already has a booking at this time');return}
+  S.appts.push({id:uid(),date:d,time:t,cust:cid,svc:g('bs'),staff:st,st:'booked',total:0});
+  sel='';D=d;save();location.hash='today';render();toast('Booking saved')}
+ if(f==='cf'){const ni=g('ci').toUpperCase();if(ni&&!NR.test(ni)){toast('NRIC should look like S1234567A');return}if(ni&&S.customers.some(x=>x.nric===ni)){toast('This NRIC already exists');return}S.customers.push({id:uid(),name:g('cn'),phone:g('cp'),nric:ni,pts:0});save();render()}
+ if(f==='sf'){S.services.push({id:uid(),name:g('svn'),price:parseFloat(g('svp'))||0,mins:parseInt(g('svm'))||30});save();render()}
+ if(f==='ff'){S.staff.push({id:uid(),name:g('fn')});save();render()}
+});
+document.addEventListener('input',e=>{if(e.target.id!=='bq')return;sel='';const v=e.target.value.trim(),r=found(v);document.getElementById('nc').style.display=v&&r.length?'none':'';document.getElementById('br').innerHTML=r.map(c=>`<button type="button" class="li" data-a="pick" data-id="${c.id}" style="width:100%;text-align:left"><div><b>${esc(c.name)}</b><br><span>${esc(c.phone||'No phone')} · ${esc(mask(c.nric)||'No NRIC')}</span></div></button>`).join('')||(v?'<p class="empty" style="padding:4px 0">No match. Fill in the new customer details below.</p>':'')});
+window.addEventListener('hashchange',render);render();
+</script></body></html>
