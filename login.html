@@ -40,11 +40,13 @@ input,select{font:inherit;display:block;width:100%;box-sizing:border-box;margin-
 .li:last-child{border:0}.li span{color:var(--mute);font-size:13px}
 .bw{height:10px;background:var(--tint);border-radius:5px;flex:1}.bw i{display:block;height:100%;background:var(--acc);border-radius:5px}
 .empty{color:var(--mute);padding:24px 0}.empty a{color:var(--acc)}
-dialog{border:1px solid var(--line);border-radius:14px;background:var(--panel);color:var(--ink);width:min(380px,92vw);padding:20px}
+dialog{border:1px solid var(--line);border-radius:14px;background:var(--panel);color:var(--ink);width:min(460px,92vw);padding:20px}
 dialog::backdrop{background:rgba(0,0,0,.45)}
 .tot{font-size:18px}.tot b{font:700 24px "Bricolage Grotesque",sans-serif;color:var(--acc)}
 #toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:9px 16px;border-radius:8px;opacity:0;transition:opacity .2s;pointer-events:none}
 #toast.on{opacity:1}
+.inv{font-size:14px}.ih,.meta{display:flex;justify-content:space-between;gap:16px;margin-bottom:16px}.ih h2{margin-bottom:2px}.ir{text-align:right}.meta span{display:block;color:var(--mute);font-size:12px}.inv table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}.inv th,.inv td{padding:9px 0;border-bottom:1px solid var(--line);text-align:left}.inv th{font-size:12px;color:var(--mute);font-weight:500}.inv th:last-child,.inv td:last-child{text-align:right;width:110px}.inv tfoot td{font-weight:700;font-size:16px;border-bottom:0;border-top:2px solid var(--ink)}.pts{color:var(--mute);font-size:13px;margin:12px 0 0}.thanks{text-align:center;margin:16px 0 8px}
+@media print{.app,#toast,.noprint{display:none!important}dialog{position:static;border:0;width:100%;color:#000;background:#fff}}
 @media(max-width:700px){.app{grid-template-columns:1fr}nav{flex-direction:row;overflow-x:auto;border-right:0;border-bottom:1px solid var(--line);padding:10px}.brand{display:none}nav a{white-space:nowrap}main{padding:18px}.g2{grid-template-columns:1fr}}
 </style></head>
 <body>
@@ -58,10 +60,11 @@ const ymd=d=>d.toLocaleDateString('en-CA');
 const money=n=>'$'+Number(n).toFixed(2);
 let S,D=ymd(new Date()),cur=null,sel='';
 try{S=JSON.parse(localStorage.getItem(K))}catch(e){}
-if(!S)S={shop:'Beauty parlor',
+if(!S)S={shop:'Sri Sana',phone:'9870 6393',addr:'',
 services:[['Haircut',25,45],['Facial',60,60],['Threading',8,15],['Manicure',30,40],['Pedicure',35,50],['Hair colour',90,120],['Bridal makeup',250,90]].map(x=>({id:uid(),name:x[0],price:x[1],mins:x[2]})),
 staff:['Anita','Meena','Priya'].map(n=>({id:uid(),name:n})),customers:[],appts:[]};
 const save=()=>{try{localStorage.setItem(K,JSON.stringify(S))}catch(e){}};
+if(S.shop==='Beauty parlor')S.shop='Sri Sana';if(S.phone===undefined)S.phone='9870 6393';if(S.addr===undefined)S.addr='';save();
 const cu=i=>S.customers.find(x=>x.id===i),sv=i=>S.services.find(x=>x.id===i),sf=i=>S.staff.find(x=>x.id===i);
 const toast=m=>{const t=document.getElementById('toast');t.textContent=m;t.classList.add('on');setTimeout(()=>t.classList.remove('on'),1800)};
 const wa=(p,t)=>{p=String(p||'').replace(/\D/g,'');if(p.length===8)p='65'+p;return'https://wa.me/'+p+'?text='+encodeURIComponent(t)};
@@ -73,15 +76,21 @@ const NR=/^[STFGM]\d{7}[A-Z]$/;
 const mask=n=>n&&n.length>=5?n[0]+'****'+n.slice(-4):(n||'');
 const norm=s=>String(s||'').toLowerCase().replace(/[\s-]/g,'');
 const found=q=>{q=norm(q);return q?S.customers.filter(c=>norm(c.name).includes(q)||norm(c.phone).includes(q)||norm(c.nric).includes(q)).slice(0,6):[]};
+const pad=(l,r,w=30)=>String(l).slice(0,w-r.length-1).padEnd(w-r.length)+r;
+const fd=d=>new Date(d+'T00:00').toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+const invNo=a=>a.inv||'INV-'+a.id.slice(0,4).toUpperCase();
+const msgRem=a=>{const c=cu(a.cust),s=sv(a.svc),f=sf(a.staff);return [`*${S.shop}*`,'*Appointment reminder*','',`Hi ${c?c.name:'there'},`,'Your appointment is coming up:','',`Service: ${s?s.name:'-'}`,`Date: ${fd(a.date)}`,`Time: ${a.time}`,`Stylist: ${f?f.name:'-'}`,'',S.phone?`To change your booking, call ${S.phone}.`:'See you soon!'].join('\n')};
+const msgInv=a=>{const c=cu(a.cust),s=sv(a.svc),f=sf(a.staff),amt=a.amt??a.total,red=a.red||0,L='-'.repeat(30);
+ return [`*${S.shop}*`,...(S.addr?[S.addr]:[]),...(S.phone?['Tel: '+S.phone]:[]),'',`*INVOICE ${invNo(a)}*`,`Date: ${fd(a.date)}`,`Customer: ${c?c.name:'-'}`,`Stylist: ${f?f.name:'-'}`,'','```'+L,pad(s?s.name:'Service',money(amt)),...(red?[pad('Points discount','-'+money(red))]:[]),L,pad('TOTAL',money(a.total)),L+'```',`Paid by: ${a.pm||'-'}`,`Points earned: ${Math.floor(a.total)}`,`Points balance: ${c?c.pts:0}`,'',`Thank you for choosing ${S.shop}!`].join('\n')};
 
 function row(a){
  const c=cu(a.cust),s=sv(a.svc),f=sf(a.staff),n=NX[a.st],ph=c&&c.phone;
- const rem=wa(ph,`Hi ${c?c.name:''}, this is ${S.shop}. A reminder of your ${s?s.name:'appointment'} on ${a.date} at ${a.time}. See you soon!`);
- const rec=wa(ph,`Thank you for visiting ${S.shop}! ${s?s.name:'Service'}: ${money(a.total)} paid by ${a.pm}. Points balance: ${c?c.pts:0}.`);
+ const rem=wa(ph,msgRem(a));
+ const rec=wa(ph,msgInv(a));
  return `<div class="row"><div class="tm">${esc(a.time)}</div>
  <div class="who"><b>${esc(c?c.name:'Deleted customer')}</b><span>${esc(s?s.name:'Service removed')} with ${esc(f?f.name:'no one')}</span></div>
  <span class="chip ${a.st}">${ST[a.st]}${a.st==='paid'?' '+money(a.total):''}</span>
- <div class="acts">${n?`<button class="pri" data-a="${n[1]}" data-id="${a.id}">${n[0]}</button>`:`<a class="btn" href="${rec}" target="_blank" rel="noopener">Send receipt</a>`}
+ <div class="acts">${n?`<button class="pri" data-a="${n[1]}" data-id="${a.id}">${n[0]}</button>`:`<button class="pri" data-a="inv" data-id="${a.id}">View invoice</button><a class="btn" href="${rec}" target="_blank" rel="noopener">Send on WhatsApp</a>`}
  ${a.st==='booked'?`<a class="btn" href="${rem}" target="_blank" rel="noopener">Send reminder</a>`:''}
  ${a.st!=='paid'?`<button data-a="del" data-id="${a.id}">Cancel booking</button>`:''}</div></div>`}
 
@@ -107,7 +116,7 @@ customers(){
  <div class="card">${S.customers.length?S.customers.map(c=>{const v=visits(c);return `<div class="li"><div><b>${esc(c.name)}</b><br><span>${esc(c.phone||'No phone')} · ${esc(mask(c.nric)||'No NRIC')} · ${v.length} visits · ${money(v.reduce((t,a)=>t+a.total,0))} spent</span></div><div><span class="chip">${c.pts} points</span> <button data-a="delc" data-id="${c.id}">Remove</button></div></div>`}).join(''):'<p class="empty">No customers yet. Add one above, or create one while booking.</p>'}</div>`},
 setup(){
  return `<div class="bar"><h1>Services and staff</h1></div>
- <div class="card"><label>Parlor name (shows on receipts)<input id="sn" value="${esc(S.shop)}"></label></div>
+ <div class="card g2"><label>Parlor name<input id="sn" value="${esc(S.shop)}"></label><label>Phone on invoices<input id="sp" inputmode="tel" value="${esc(S.phone)}"></label><label style="grid-column:1/-1">Address on invoices (optional)<input id="sa" value="${esc(S.addr)}"></label></div>
  <div class="card"><h2>Services</h2>${S.services.map(x=>`<div class="li"><div>${esc(x.name)}<br><span>${money(x.price)} · ${x.mins} min</span></div><button data-a="dels" data-id="${x.id}">Remove</button></div>`).join('')}
  <form id="sf" class="g2" style="margin-top:12px"><label>Service<input id="svn" required></label><label>Price (SGD)<input id="svp" type="number" step="0.01" min="0" required></label><label>Minutes<input id="svm" type="number" min="5" value="30"></label><div style="align-self:end;margin-bottom:10px"><button class="pri" type="submit">Add service</button></div></form></div>
  <div class="card"><h2>Staff</h2>${S.staff.map(x=>`<div class="li"><div>${esc(x.name)}</div><button data-a="delf" data-id="${x.id}">Remove</button></div>`).join('')}
@@ -138,6 +147,21 @@ function openBill(id){
  <p class="tot">Total <b id="tot"></b></p><div class="acts"><button data-a="close">Back</button><button class="pri" data-a="pay">Take payment</button></div>`;
  calc();document.getElementById('dlg').showModal();
 }
+function openInv(id){
+ const a=S.appts.find(x=>x.id===id),c=cu(a.cust),s=sv(a.svc),f=sf(a.staff),amt=a.amt??a.total,red=a.red||0;
+ document.getElementById('dlg').innerHTML=`<div class="inv">
+ <div class="ih"><div><h2>${esc(S.shop)}</h2>${S.addr?`<div>${esc(S.addr)}</div>`:''}${S.phone?`<div>Tel ${esc(S.phone)}</div>`:''}</div>
+ <div class="ir"><b>INVOICE</b><div>${esc(invNo(a))}</div><div>${fd(a.date)}</div></div></div>
+ <div class="meta"><div><span>Billed to</span><b>${esc(c?c.name:'-')}</b>${c&&c.phone?`<div>${esc(c.phone)}</div>`:''}</div><div class="ir"><span>Stylist</span><b>${esc(f?f.name:'-')}</b><div>Paid by ${esc(a.pm||'-')}</div></div></div>
+ <table><thead><tr><th>Description</th><th>Amount</th></tr></thead><tbody>
+ <tr><td>${esc(s?s.name:'Service')}</td><td>${money(amt)}</td></tr>
+ ${red?`<tr><td>Points discount (100 points)</td><td>-${money(red)}</td></tr>`:''}
+ </tbody><tfoot><tr><td>Total paid</td><td>${money(a.total)}</td></tr></tfoot></table>
+ <p class="pts">Points earned ${Math.floor(a.total)} · Balance ${c?c.pts:0}</p>
+ <p class="thanks">Thank you for choosing ${esc(S.shop)}.</p></div>
+ <div class="acts noprint"><button data-a="close">Close</button><button data-a="print">Print</button><a class="btn" href="${wa(c&&c.phone,msgInv(a))}" target="_blank" rel="noopener">Send on WhatsApp</a></div>`;
+ document.getElementById('dlg').showModal();
+}
 function calc(){const r=document.getElementById('red');const t=Math.max(0,(parseFloat(document.getElementById('amt').value)||0)-(r&&r.checked?5:0));document.getElementById('tot').textContent=money(t);return t}
 document.getElementById('dlg').addEventListener('input',calc);
 document.addEventListener('click',e=>{
@@ -145,10 +169,12 @@ document.addEventListener('click',e=>{
  const a=b.dataset.a,id=b.dataset.id,ap=S.appts.find(x=>x.id===id);
  if(a==='in'||a==='svc'){ap.st=a;save();render()}
  else if(a==='bill')openBill(id);
+ else if(a==='inv')openInv(id);
+ else if(a==='print'){try{window.print()}catch(err){toast('Print is blocked in this view')}}
  else if(a==='close')document.getElementById('dlg').close();
  else if(a==='pay'){const ap2=S.appts.find(x=>x.id===cur),c=cu(ap2.cust),r=document.getElementById('red'),t=calc();
   if(c){if(r&&r.checked)c.pts-=100;c.pts+=Math.floor(t)}
-  ap2.total=t;ap2.pm=document.getElementById('pm').value;ap2.st='paid';save();document.getElementById('dlg').close();render();toast('Payment saved')}
+  ap2.amt=parseFloat(document.getElementById('amt').value)||0;ap2.red=r&&r.checked?5:0;ap2.inv='INV-'+String(S.appts.filter(x=>x.st==='paid').length+1).padStart(4,'0');ap2.total=t;ap2.pm=document.getElementById('pm').value;ap2.st='paid';save();document.getElementById('dlg').close();render();openInv(ap2.id);toast('Payment saved')}
  else if(a==='pick'){const c=cu(id);sel=id;document.getElementById('bq').value=c.name;document.getElementById('br').innerHTML=`<p class="chip" style="display:inline-block">Selected: ${esc(c.name)} · ${esc(c.phone||'No phone')}</p>`;document.getElementById('nc').style.display='none'}
  else if(a==='del'){S.appts=S.appts.filter(x=>x.id!==id);save();render();toast('Booking cancelled')}
  else if(a==='delc'){S.customers=S.customers.filter(x=>x.id!==id);save();render()}
@@ -158,7 +184,7 @@ document.addEventListener('click',e=>{
   const txt=`${S.shop} — last 7 days\nServices done: ${P.length}\nRevenue: ${money(P.reduce((t,x)=>t+x.total,0))}`;
   try{navigator.clipboard.writeText(txt).then(()=>toast('Summary copied'),()=>toast('Copy blocked by browser'))}catch(err){toast('Copy blocked by browser')}}
 });
-document.addEventListener('change',e=>{if(e.target.id==='dt'){D=e.target.value||D;render()}if(e.target.id==='sn'){S.shop=e.target.value.trim()||'Beauty parlor';save();render()}});
+document.addEventListener('change',e=>{if(e.target.id==='dt'){D=e.target.value||D;render()}if(e.target.id==='sn'){S.shop=e.target.value.trim()||'Sri Sana';save();render()}if(e.target.id==='sp'){S.phone=e.target.value.trim();save()}if(e.target.id==='sa'){S.addr=e.target.value.trim();save()}});
 document.addEventListener('submit',e=>{
  e.preventDefault();const f=e.target.id,g=i=>document.getElementById(i).value.trim();
  if(f==='bf'){
