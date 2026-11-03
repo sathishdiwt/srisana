@@ -60,11 +60,11 @@ const ymd=d=>d.toLocaleDateString('en-CA');
 const money=n=>'$'+Number(n).toFixed(2);
 let S,D=ymd(new Date()),cur=null,sel='';
 try{S=JSON.parse(localStorage.getItem(K))}catch(e){}
-if(!S)S={shop:'Sri Sana',phone:'9870 6393',addr:'',
+if(!S)S={shop:'Sri Sana',phone:'9870 6393',addr:'26 Clive Street, #02-014, Singapore 209781',
 services:[['Haircut',25,45],['Facial',60,60],['Threading',8,15],['Manicure',30,40],['Pedicure',35,50],['Hair colour',90,120],['Bridal makeup',250,90]].map(x=>({id:uid(),name:x[0],price:x[1],mins:x[2]})),
 staff:['Anita','Meena','Priya'].map(n=>({id:uid(),name:n})),customers:[],appts:[]};
 const save=()=>{try{localStorage.setItem(K,JSON.stringify(S))}catch(e){}};
-if(S.shop==='Beauty parlor')S.shop='Sri Sana';if(S.phone===undefined)S.phone='9870 6393';if(S.addr===undefined)S.addr='';save();
+if(S.shop==='Beauty parlor')S.shop='Sri Sana';if(S.phone===undefined)S.phone='9870 6393';if(!S.addr)S.addr='26 Clive Street, #02-014, Singapore 209781';save();
 const cu=i=>S.customers.find(x=>x.id===i),sv=i=>S.services.find(x=>x.id===i),sf=i=>S.staff.find(x=>x.id===i);
 const toast=m=>{const t=document.getElementById('toast');t.textContent=m;t.classList.add('on');setTimeout(()=>t.classList.remove('on'),1800)};
 const wa=(p,t)=>{p=String(p||'').replace(/\D/g,'');if(p.length===8)p='65'+p;return'https://wa.me/'+p+'?text='+encodeURIComponent(t)};
