@@ -60,8 +60,8 @@ details{border-bottom:1px solid var(--line)}summary{cursor:pointer;padding:10px 
 <dialog id="dlg"></dialog><div id="toast" role="status"></div><div id="sync" role="status"></div>
 <script>
 /* ===== SUPABASE SETTINGS: paste your own values (Project Settings > API) ===== */
-const SB_URL='https://jofbyyznznfcvhebpwsx.supabase.co';   // e.g. https://abcdxyz.supabase.co
-const SB_KEY='sb_publishable_IsMcjJM6whAVPgjpJV4cGg_yVxgIce-';   // the public "anon" key. Never put the service_role key here.
+const SB_URL='';   // e.g. https://abcdxyz.supabase.co
+const SB_KEY='';   // the public "anon" key. Never put the service_role key here.
 /* ============================================================================ */
 const K='parlor_desk_v1';
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -86,7 +86,7 @@ const rowsOf=s=>({settings:{'1':{id:'1',shop:s.shop,phone:s.phone,addr:s.addr,op
 const mk=(t,rows)=>rows.map(r=>{const o={};COLS[t].forEach(k=>{if(k!=='ord'&&r[k]!=null)o[k==='descr'?'desc':k]=r[k]});return o});
 const takeSnap=()=>{const c=rowsOf(S);snap={};TB.forEach(t=>{snap[t]=Object.fromEntries(Object.entries(c[t]).map(([id,r])=>[id,JSON.stringify(r)]))})};
 async function load(){
- const [st,...rest]=await Promise.all(TB.map(t=>api('GET',t+'?select=*'+(t==='settings'?'':'&order=ord.asc'))));
+ const [st,...rest]=await Promise.all(TB.map(t=>api('GET','parlor_'+t+'?select=*'+(t==='settings'?'':'&order=ord.asc'))));
  if(!st.length)return null;
  const [sv_,sf_,cs,ap,ex]=rest,s=st[0];
  return{shop:s.shop||'Sri Sana',phone:s.phone||'',addr:s.addr||'',open:s.open||{},services:mk('services',sv_),staff:mk('staff',sf_),customers:mk('customers',cs),appts:mk('appts',ap),exp:mk('expenses',ex),v2:1}}
@@ -99,8 +99,8 @@ async function push(){
   for(const t of TB){
    const m=c[t],o=snap[t]||{};
    const up=Object.values(m).filter(r=>o[r.id]!==JSON.stringify(r)),del=Object.keys(o).filter(id=>!(id in m));
-   if(up.length)await api('POST',t+'?on_conflict=id',up,'resolution=merge-duplicates,return=minimal');
-   if(del.length)await api('DELETE',t+'?id=in.('+del.map(i=>'"'+i+'"').join(',')+')',null,'return=minimal');
+   if(up.length)await api('POST','parlor_'+t+'?on_conflict=id',up,'resolution=merge-duplicates,return=minimal');
+   if(del.length)await api('DELETE','parlor_'+t+'?id=in.('+del.map(i=>'"'+i+'"').join(',')+')',null,'return=minimal');
    snap[t]=Object.fromEntries(Object.entries(m).map(([id,r])=>[id,JSON.stringify(r)]));
   }
   ok=true;setSt('Saved to Supabase')
