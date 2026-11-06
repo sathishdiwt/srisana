@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>New customer</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700&family=Figtree:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#F6F2F7;--panel:#fff;--ink:#2A1A2E;--mute:#6E5F73;--line:#E4DCE8;--acc:#7B3F86;--accink:#fff;--ok:#2F7D5B;--warn:#A8501C;--tint:#EFE4F2;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#171019;--panel:#221829;--ink:#F3EAF5;--mute:#B5A6BB;--line:#382A40;--acc:#C58BD0;--accink:#1A0F1D;--ok:#6CCB9F;--warn:#F0A06B;--tint:#33233B;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#171019;--panel:#221829;--ink:#F3EAF5;--mute:#B5A6BB;--line:#382A40;--acc:#C58BD0;--accink:#1A0F1D;--ok:#6CCB9F;--warn:#F0A06B;--tint:#33233B;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;font:15px/1.5 Figtree,system-ui,sans-serif;background:var(--bg);color:var(--ink)}
+h1,h2,.brand{font-family:"Bricolage Grotesque",Figtree,sans-serif;font-weight:700;margin:0}
+main{max-width:560px;margin:0 auto;padding:28px 18px}
+@view-transition{navigation:auto}
+.home{display:inline-block;color:var(--acc);font-weight:600;text-decoration:none;margin-bottom:14px;padding:6px 0}
+.home:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.brand{color:var(--acc);font-size:18px;margin-bottom:6px}
+h1{font-size:26px;margin-bottom:18px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:0 14px}
+label{display:block;font-weight:500;font-size:13px;color:var(--mute);margin-bottom:12px}
+input{font:inherit;display:block;width:100%;box-sizing:border-box;margin-top:4px;padding:9px 10px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}
+input:focus-visible,button:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+button{font:inherit;font-weight:600;padding:10px 16px;border-radius:8px;border:1px solid var(--acc);background:var(--acc);color:var(--accink);cursor:pointer}
+button:disabled{opacity:.6;cursor:default}
+.full{grid-column:1/-1}
+.msg{margin-top:14px;padding:10px 12px;border-radius:8px;font-weight:500}
+.msg.ok{background:var(--tint);color:var(--ok)}
+.msg.bad{background:var(--tint);color:var(--warn)}
+#sync{position:fixed;left:12px;bottom:12px;font-size:12px;padding:3px 10px;border-radius:99px;background:var(--panel);border:1px solid var(--line);color:var(--mute)}
+#sync.bad{color:var(--warn);border-color:var(--warn)}
+@media(max-width:560px){.g2{grid-template-columns:1fr}}
+</style></head>
+<body>
+<main>
+ <a class="home" href="index.html">&larr; Home</a>
+ <div class="brand" id="shop">Sri Sana</div>
+ <h1>New customer</h1>
+ <form id="cf" class="card g2" novalidate>
+  <label>Name<input id="cn" required autocomplete="off"></label>
+  <label>Phone (WhatsApp)<input id="cp" inputmode="tel" placeholder="9123 4567"></label>
+  <label>NRIC / FIN<input id="ci" autocomplete="off" maxlength="9" placeholder="S1234567A"></label>
+  <label>Date of birth (optional)<input id="cd" type="date"></label>
+  <div class="full"><button class="pri" type="submit" id="go">Register customer</button></div>
+  <div class="full" id="out" role="status"></div>
+ </form>
+</main>
+<div id="sync" role="status"></div>
+<script>
+/* ===== SUPABASE SETTINGS (same project as the main parlor app) ===== */
+const SB_URL='https://jofbyyznznfcvhebpwsx.supabase.co';
+const SB_KEY='sb_publishable_IsMcjJM6whAVPgjpJV4cGg_yVxgIce-';
+/* =================================================================== */
+const $=id=>document.getElementById(id);
+const uid=()=>Math.random().toString(36).slice(2,9);
+const NR=/^[STFGM]\d{7}[A-Z]$/;
+const setSt=(m,bad)=>{$('sync').textContent=m;$('sync').className=bad?'bad':''};
+async function api(m,p,b,pref){
+ const h={apikey:SB_KEY,Authorization:'Bearer '+SB_KEY};if(b)h['Content-Type']='application/json';if(pref)h.Prefer=pref;
+ const r=await fetch(SB_URL+'/rest/v1/'+p,{method:m,headers:h,body:b?JSON.stringify(b):undefined});
+ if(!r.ok)throw new Error(r.status+' '+(await r.text()).slice(0,200));
+ const t=await r.text();return t?JSON.parse(t):null}
+const show=(t,c)=>{$('out').innerHTML=t?'<div class="msg '+c+'">'+t.replace(/[&<>]/g,x=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[x]))+'</div>':''};
+
+(async()=>{
+ try{const s=await api('GET','parlor_settings?select=shop&limit=1');if(s&&s[0]&&s[0].shop)$('shop').textContent=s[0].shop;setSt('Connected to Supabase')}
+ catch(e){setSt('Cannot reach Supabase',1)}
+})();
+
+$('cf').addEventListener('submit',async e=>{
+ e.preventDefault();
+ const name=$('cn').value.trim(),phone=$('cp').value.trim(),nric=$('ci').value.trim().toUpperCase(),dob=$('cd').value;
+ if(!name){show('Enter the customer’s name','bad');return}
+ if(nric&&!NR.test(nric)){show('NRIC should look like S1234567A','bad');return}
+ $('go').disabled=true;show('','');setSt('Saving…');
+ try{
+  if(nric){
+   const dup=await api('GET','parlor_customers?select=id&nric=eq.'+encodeURIComponent(nric)+'&limit=1');
+   if(dup&&dup.length){show('This NRIC is already registered. Use the existing customer page to book.','bad');setSt('Connected to Supabase');$('go').disabled=false;return}
+  }
+  const top=await api('GET','parlor_customers?select=ord&order=ord.desc&limit=1');
+  const ord=top&&top.length?(top[0].ord||0)+1:0;
+  await api('POST','parlor_customers',[{id:uid(),ord,name,phone:phone||null,nric:nric||null,dob:dob||null,pts:0}],'return=minimal');
+  setSt('Saved to Supabase');
+  try{sessionStorage.setItem('flash_name',name)}catch(e){}
+  location.href='index.html?done=reg';return;
+ }catch(err){console.error(err);show('Not saved: '+err.message,'bad');setSt('Not saved',1)}
+ $('go').disabled=false;
+});
+</script></body></html>

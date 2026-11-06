@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Existing customer booking</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700&family=Figtree:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#F6F2F7;--panel:#fff;--ink:#2A1A2E;--mute:#6E5F73;--line:#E4DCE8;--acc:#7B3F86;--accink:#fff;--ok:#2F7D5B;--warn:#A8501C;--tint:#EFE4F2;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#171019;--panel:#221829;--ink:#F3EAF5;--mute:#B5A6BB;--line:#382A40;--acc:#C58BD0;--accink:#1A0F1D;--ok:#6CCB9F;--warn:#F0A06B;--tint:#33233B;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#171019;--panel:#221829;--ink:#F3EAF5;--mute:#B5A6BB;--line:#382A40;--acc:#C58BD0;--accink:#1A0F1D;--ok:#6CCB9F;--warn:#F0A06B;--tint:#33233B;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;font:15px/1.5 Figtree,system-ui,sans-serif;background:var(--bg);color:var(--ink)}
+h1,h2,.brand,b.big{font-family:"Bricolage Grotesque",Figtree,sans-serif;font-weight:700;margin:0}
+main{max-width:600px;margin:0 auto;padding:28px 18px}
+@view-transition{navigation:auto}
+.home{display:inline-block;color:var(--acc);font-weight:600;text-decoration:none;margin-bottom:14px;padding:6px 0}
+.home:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.brand{color:var(--acc);font-size:18px;margin-bottom:6px}
+h1{font-size:26px;margin-bottom:18px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:0 14px}
+label{display:block;font-weight:500;font-size:13px;color:var(--mute);margin-bottom:12px}
+input,select{font:inherit;display:block;width:100%;box-sizing:border-box;margin-top:4px;padding:9px 10px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}
+input:focus-visible,select:focus-visible,button:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+button{font:inherit;font-weight:600;padding:10px 16px;border-radius:8px;border:1px solid var(--acc);background:var(--acc);color:var(--accink);cursor:pointer}
+button:disabled{opacity:.6;cursor:default}
+.cb{position:relative;margin-bottom:12px;grid-column:1/-1}.cb label{margin-bottom:0}
+.cl{position:absolute;left:0;right:0;z-index:20;max-height:260px;overflow:auto;background:var(--panel);border:1px solid var(--line);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.18)}.cl[hidden]{display:none}
+.co{display:flex;justify-content:space-between;gap:10px;width:100%;text-align:left;border:0;border-bottom:1px solid var(--line);border-radius:0;background:transparent;color:var(--ink);padding:9px 12px;font-weight:500}
+.co b{color:var(--mute);font-weight:500;font-size:13px}
+.co:hover,.co:focus{background:var(--tint)}
+.ch{padding:7px 12px;font-size:12px;font-weight:600;color:var(--mute);background:var(--bg);position:sticky;top:0}
+.chip{display:inline-block;margin:8px 0 0;font-size:13px;font-weight:600;padding:3px 10px;border-radius:99px;background:var(--tint);color:var(--acc)}
+.full{grid-column:1/-1}
+.msg{margin-top:14px;padding:10px 12px;border-radius:8px;font-weight:500;background:var(--tint)}
+.msg.ok{color:var(--ok)}.msg.bad{color:var(--warn)}
+.done h2{margin-bottom:8px}.done p{margin:2px 0;color:var(--mute)}.done button{margin-top:14px}
+#sync{position:fixed;left:12px;bottom:12px;font-size:12px;padding:3px 10px;border-radius:99px;background:var(--panel);border:1px solid var(--line);color:var(--mute)}
+#sync.bad{color:var(--warn);border-color:var(--warn)}
+@media(max-width:560px){.g2{grid-template-columns:1fr}}
+</style></head>
+<body>
+<main>
+ <a class="home" href="index.html">&larr; Home</a>
+ <div class="brand" id="shop">Sri Sana</div>
+ <h1>New booking</h1>
+ <div id="app"><p style="color:var(--mute)">Loading…</p></div>
+</main>
+<div id="sync" role="status"></div>
+<script>
+/* ===== SUPABASE SETTINGS (same project as the main parlor app) ===== */
+const SB_URL='https://jofbyyznznfcvhebpwsx.supabase.co';
+const SB_KEY='sb_publishable_IsMcjJM6whAVPgjpJV4cGg_yVxgIce-';
+/* =================================================================== */
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid=()=>Math.random().toString(36).slice(2,9);
+const ymd=d=>d.toLocaleDateString('en-CA');
+const money=n=>'$'+Number(n).toFixed(2);
+const norm=s=>String(s||'').toLowerCase().replace(/[\s-]/g,'');
+/* show the first half, hide the rest */
+const half=s=>{s=String(s||'');if(!s)return'';const k=Math.ceil(s.length/2);return s.slice(0,k)+'*'.repeat(s.length-k)};
+const priceTxt=x=>x.enq?'Price on enquiry':money(x.price)+(x.pp?'++':'');
+const setSt=(m,bad)=>{$('sync').textContent=m;$('sync').className=bad?'bad':''};
+async function api(m,p,b,pref){
+ const h={apikey:SB_KEY,Authorization:'Bearer '+SB_KEY};if(b)h['Content-Type']='application/json';if(pref)h.Prefer=pref;
+ const r=await fetch(SB_URL+'/rest/v1/'+p,{method:m,headers:h,body:b?JSON.stringify(b):undefined});
+ if(!r.ok)throw new Error(r.status+' '+(await r.text()).slice(0,200));
+ const t=await r.text();return t?JSON.parse(t):null}
+
+let CU=[],SV=[],SF=[],cust='',svc='';
+const byCat=()=>{const m={};SV.forEach(x=>{const k=x.cat||'Other';(m[k]=m[k]||[]).push(x)});return Object.entries(m)};
+
+async function boot(){
+ try{
+  const [st,sv,sf,cu]=await Promise.all([
+   api('GET','parlor_settings?select=shop&limit=1'),
+   api('GET','parlor_services?select=id,cat,name,price,pp,enq&order=ord.asc'),
+   api('GET','parlor_staff?select=id,name&order=ord.asc'),
+   api('GET','parlor_customers?select=id,name,phone,nric&order=name.asc')]);
+  if(st&&st[0]&&st[0].shop)$('shop').textContent=st[0].shop;
+  SV=sv||[];SF=sf||[];CU=cu||[];
+  setSt('Connected to Supabase');form();
+ }catch(e){console.error(e);setSt('Cannot reach Supabase',1);
+  $('app').innerHTML='<div class="card"><h2>Could not connect</h2><p>'+esc(e.message)+'</p><button id="retry">Try again</button></div>'}
+}
+function form(){
+ cust='';svc='';
+ $('app').innerHTML=`<form id="bf" class="card g2" novalidate>
+  <div class="cb"><label>Customer: click to choose, or type name, phone or NRIC<input id="bq" autocomplete="off" placeholder="Click to choose or type to search"></label><div id="br" class="cl" hidden></div><div id="bx"></div></div>
+  <div class="cb"><label>Service: click to choose, or type to search<input id="sq" autocomplete="off" placeholder="e.g. facial"></label><div id="sr" class="cl" hidden></div><div id="sx"></div></div>
+  <label>Stylist<select id="bt">${SF.map(x=>`<option value="${esc(x.id)}">${esc(x.name)}</option>`).join('')}</select></label>
+  <label>Date<input type="date" id="bd" value="${ymd(new Date())}" required></label>
+  <label>Time<input type="time" id="bm" value="10:00" required></label>
+  <div class="full"><button type="submit" id="go">Save booking</button></div>
+  <div class="full" id="out" role="status"></div></form>`;
+}
+const show=(t,c)=>{$('out').innerHTML=t?`<div class="msg ${c}">${esc(t)}</div>`:''};
+const hideL=()=>document.querySelectorAll('.cl').forEach(x=>x.hidden=true);
+function custList(){
+ const q=norm($('bq').value),m=CU.filter(c=>!q||norm(c.name).includes(q)||norm(c.phone).includes(q)||norm(c.nric).includes(q)),p=$('br');
+ p.innerHTML=m.length?m.slice(0,50).map(c=>`<button type="button" class="co" data-k="c" data-id="${esc(c.id)}"><span>${esc(c.name)}</span><b>${esc(half(c.phone)||'No phone')}</b></button>`).join(''):'<div class="ch">No customer found. Register them on the New customer page first.</div>';
+ p.hidden=false}
+function svcList(){
+ const q=norm($('sq').value),p=$('sr');
+ const h=byCat().map(([k,v])=>{const m=v.filter(x=>!q||norm(x.name+k).includes(q));return m.length?`<div class="ch">${esc(k)}</div>`+m.map(x=>`<button type="button" class="co" data-k="s" data-id="${esc(x.id)}"><span>${esc(x.name)}</span><b>${esc(priceTxt(x))}</b></button>`).join(''):''}).join('');
+ p.innerHTML=h||'<div class="ch">No service found</div>';p.hidden=false}
+
+document.addEventListener('focusin',e=>{if(e.target.id==='bq')custList();if(e.target.id==='sq')svcList()});
+document.addEventListener('input',e=>{
+ if(e.target.id==='bq'){cust='';$('bx').innerHTML='';custList()}
+ if(e.target.id==='sq'){svc='';$('sx').innerHTML='';svcList()}});
+document.addEventListener('keydown',e=>{if(e.key==='Enter'&&(e.target.id==='bq'||e.target.id==='sq'))e.preventDefault();if(e.key==='Escape')hideL()});
+document.addEventListener('click',e=>{
+ if(e.target.id==='retry'){boot();return}
+ if(e.target.id==='again'){form();return}
+ const b=e.target.closest('.co');
+ if(b){const id=b.dataset.id;
+  if(b.dataset.k==='c'){const c=CU.find(x=>x.id===id);cust=id;$('bq').value=c.name;
+   $('bx').innerHTML=`<span class="chip">${esc(c.name)} · ${esc(half(c.phone)||'No phone')}${c.nric?' · '+esc(half(c.nric)):''}</span>`}
+  else{const x=SV.find(s=>s.id===id);svc=id;$('sq').value=x.name;$('sx').innerHTML=`<span class="chip">${esc(x.name)} · ${esc(priceTxt(x))}</span>`}
+  hideL();return}
+ if(!e.target.closest('.cb'))hideL()});
+
+document.addEventListener('submit',async e=>{
+ e.preventDefault();
+ if(!cust){show('Choose a customer from the list','bad');return}
+ if(!svc){show('Choose a service','bad');return}
+ const d=$('bd').value,t=$('bm').value,st=$('bt').value;
+ if(!st){show('No stylist available. Add one in the main app.','bad');return}
+ if(!d||!t){show('Pick a date and time','bad');return}
+ $('go').disabled=true;show('','');setSt('Saving…');
+ try{
+  const q='parlor_appts?select=id&date=eq.'+encodeURIComponent(d)+'&time=eq.'+encodeURIComponent(t)+'&staff=eq.'+encodeURIComponent(st)+'&st=neq.paid&limit=1';
+  const clash=await api('GET',q);
+  if(clash&&clash.length){show('That stylist already has a booking at this time','bad');setSt('Connected to Supabase');$('go').disabled=false;return}
+  const top=await api('GET','parlor_appts?select=ord&order=ord.desc&limit=1');
+  const ord=top&&top.length?(top[0].ord||0)+1:0;
+  await api('POST','parlor_appts',[{id:uid(),ord,date:d,time:t,cust,svc,staff:st,st:'booked',total:0}],'return=minimal');
+  setSt('Saved to Supabase');
+  const c=CU.find(x=>x.id===cust);
+  try{sessionStorage.setItem('flash_name',c?c.name:'')}catch(e){}
+  location.href='index.html?done=book';return;
+ }catch(err){console.error(err);show('Not saved: '+err.message,'bad');setSt('Not saved',1);$('go').disabled=false}
+});
+boot();
+</script></body></html>

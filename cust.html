@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#7B3F86">
+<title>Sri Sana: Front desk</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700;800&family=Figtree:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+@view-transition{navigation:auto}
+:root{--bg:#F6F2F7;--panel:#fff;--ink:#2A1A2E;--mute:#6E5F73;--line:#E4DCE8;--acc:#7B3F86;--accink:#fff;--ok:#2F7D5B;--warn:#A8501C;--tint:#EFE4F2;
+ --glow:color-mix(in oklab,var(--acc) 22%,transparent);
+ box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#171019;--panel:#221829;--ink:#F3EAF5;--mute:#B5A6BB;--line:#382A40;--acc:#C58BD0;--accink:#1A0F1D;--ok:#6CCB9F;--warn:#F0A06B;--tint:#33233B;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#171019;--panel:#221829;--ink:#F3EAF5;--mute:#B5A6BB;--line:#382A40;--acc:#C58BD0;--accink:#1A0F1D;--ok:#6CCB9F;--warn:#F0A06B;--tint:#33233B;color-scheme:dark}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px);-webkit-text-size-adjust:100%}
+body{margin:0;min-height:100dvh;font:16px/1.5 Figtree,system-ui,sans-serif;color:var(--ink);
+ background:radial-gradient(120% 60% at 50% -10%,var(--glow),transparent 70%),var(--bg)}
+.wrap{max-width:720px;margin:0 auto;padding:clamp(20px,6vw,48px) 18px 40px;display:flex;flex-direction:column;gap:28px;min-height:100dvh}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.logo{display:flex;align-items:center;gap:12px}
+.mark{width:44px;height:44px;border-radius:14px;background:var(--acc);color:var(--accink);display:grid;place-items:center;font:800 20px "Bricolage Grotesque",sans-serif}
+.logo b{display:block;font:700 18px "Bricolage Grotesque",sans-serif;line-height:1.1}
+.logo span{color:var(--mute);font-size:13px}
+.flash{display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:16px;background:var(--panel);border:1px solid var(--ok);color:var(--ink);box-shadow:0 12px 30px -18px var(--ok);animation:pop .35s ease}
+.flash[hidden]{display:none}
+.flash i{flex:none;width:32px;height:32px;border-radius:50%;background:var(--ok);color:var(--accink);display:grid;place-items:center}
+.flash svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
+.flash b{display:block}.flash span{color:var(--mute);font-size:14px}
+.flash button{margin-left:auto;font:inherit;background:none;border:0;color:var(--mute);cursor:pointer;padding:6px;font-size:20px;line-height:1}
+@keyframes pop{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
+h1{font:800 clamp(30px,8vw,44px)/1.1 "Bricolage Grotesque",sans-serif;margin:0;letter-spacing:-.02em;text-wrap:balance}
+.lead{color:var(--mute);margin:10px 0 0;max-width:46ch;text-wrap:pretty}
+.grid{display:grid;gap:14px;container-type:inline-size}
+.act{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:16px;text-decoration:none;color:var(--ink);
+ background:var(--panel);border:1px solid var(--line);border-radius:22px;padding:clamp(18px,4vw,26px);min-height:112px;
+ box-shadow:0 1px 0 var(--line),0 12px 30px -18px var(--glow);
+ transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease;-webkit-tap-highlight-color:transparent}
+.act:hover{transform:translateY(-2px);border-color:var(--acc);box-shadow:0 1px 0 var(--line),0 18px 36px -16px var(--glow)}
+.act:active{transform:scale(.985)}
+.act:focus-visible{outline:3px solid var(--acc);outline-offset:3px}
+.ic{width:56px;height:56px;border-radius:18px;display:grid;place-items:center;background:var(--tint);color:var(--acc)}
+.act.pri .ic{background:var(--acc);color:var(--accink)}
+.ic svg{width:28px;height:28px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.act h2{font:700 21px "Bricolage Grotesque",sans-serif;margin:0 0 2px}
+.act p{margin:0;color:var(--mute);font-size:14px}
+.go{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;border:1px solid var(--line);color:var(--mute);transition:.18s}
+.go svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.act:hover .go{background:var(--acc);border-color:var(--acc);color:var(--accink)}
+@container (min-width:560px){.grid{grid-template-columns:1fr 1fr}.act{grid-template-columns:1fr auto;grid-template-rows:auto auto;align-content:space-between;min-height:220px}.act .ic{grid-column:1;grid-row:1}.act .go{grid-column:2;grid-row:1;justify-self:end}.act .tx{grid-column:1/-1;grid-row:2;align-self:end}}
+footer{margin-top:auto;color:var(--mute);font-size:13px;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+#sync{display:inline-flex;align-items:center;gap:6px}
+#sync::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--mute)}
+#sync.ok::before{background:var(--ok)}#sync.bad::before{background:var(--warn)}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style></head>
+<body>
+<div class="wrap">
+ <header>
+  <div class="logo"><div class="mark" id="mk">S</div><div><b id="shop">Sri Sana</b><span>Front desk</span></div></div>
+ </header>
+ <div class="flash" id="flash" role="status" hidden><i aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></i><div><b id="fh"></b><span id="fs"></span></div><button type="button" id="fx" aria-label="Dismiss">&times;</button></div>
+ <section>
+  <h1>Ready for your next guest</h1>
+  <p class="lead">Register a first-time customer, or book an appointment for someone already on file.</p>
+ </section>
+ <nav class="grid" aria-label="Front desk actions">
+  <a class="act pri" href="new-customer.html">
+   <div class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="10" cy="8" r="4"/><path d="M2.5 20c.8-3.6 3.8-5.5 7.5-5.5 1.6 0 3 .3 4.2.9"/><path d="M19 14v6M16 17h6"/></svg></div>
+   <div class="tx"><h2>New customer</h2><p>Register a first-time visitor</p></div>
+   <div class="go" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
+  </a>
+  <a class="act" href="existing-customer-booking.html">
+   <div class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M8 3v4M16 3v4M3.5 10h17"/><path d="m9 15 2 2 4-4"/></svg></div>
+   <div class="tx"><h2>Existing customer</h2><p>Book an appointment</p></div>
+   <div class="go" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
+  </a>
+ </nav>
+ <footer><span id="sync" role="status">Connecting…</span><span id="date"></span></footer>
+</div>
+<script>
+/* ===== SUPABASE SETTINGS (same project as the other pages) ===== */
+const SB_URL='https://jofbyyznznfcvhebpwsx.supabase.co';
+const SB_KEY='sb_publishable_IsMcjJM6whAVPgjpJV4cGg_yVxgIce-';
+/* =============================================================== */
+const $=id=>document.getElementById(id);
+const get=p=>fetch(SB_URL+'/rest/v1/'+p,{headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY}}).then(r=>{if(!r.ok)throw new Error(r.status);return r.json()});
+$('date').textContent=new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'});
+(async()=>{
+ try{
+  const s=await get('parlor_settings?select=shop&limit=1');
+  if(s[0]&&s[0].shop){$('shop').textContent=s[0].shop;$('mk').textContent=s[0].shop.trim().charAt(0).toUpperCase()}
+  $('sync').textContent='Connected';$('sync').className='ok';
+ }catch(e){$('sync').textContent='Offline: pages may not save';$('sync').className='bad'}
+})();
+/* success message after registration or booking */
+(()=>{
+ const q=new URLSearchParams(location.search),k=q.get('done');
+ if(!k)return;
+ let n='';try{n=sessionStorage.getItem('flash_name')||'';sessionStorage.removeItem('flash_name')}catch(e){}
+ const M={reg:['Registration successful',(n||'The customer')+' is now on file. You can book them from Existing customer.'],book:['Booking successful',(n?n+'’s':'The')+' appointment has been saved.']}[k];
+ if(M){$('fh').textContent=M[0];$('fs').textContent=M[1];$('flash').hidden=false;setTimeout(()=>{$('flash').hidden=true},8000)}
+ $('fx').onclick=()=>{$('flash').hidden=true};
+ history.replaceState(null,'',location.pathname);
+})();
+</script></body></html>
