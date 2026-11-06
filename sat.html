@@ -54,7 +54,25 @@ dialog::backdrop{background:rgba(0,0,0,.45)}
 details{border-bottom:1px solid var(--line)}summary{cursor:pointer;padding:10px 0}summary span{color:var(--mute);font-size:13px}
 .login{max-width:360px;margin:60px auto;text-align:center}.login .card{display:grid;gap:10px;text-align:left;margin-top:14px}.login button{padding:12px;text-align:center}.nav-out{margin-top:auto}
 @media print{.app,#toast,#sync,.noprint{display:none!important}dialog{position:static;border:0;width:100%;color:#000;background:#fff}}
-@media(max-width:700px){.app{grid-template-columns:1fr}nav{flex-direction:row;overflow-x:auto;border-right:0;border-bottom:1px solid var(--line);padding:10px}.brand{display:none}nav a{white-space:nowrap}main{padding:18px}.g2{grid-template-columns:1fr}.nav-out{margin-top:0;white-space:nowrap}}
+nav i,nav .sh{display:none}
+@media(max-width:700px){
+.app{grid-template-columns:1fr;min-height:100dvh}
+nav{position:fixed;left:0;right:0;bottom:0;z-index:30;flex-direction:row;justify-content:space-around;gap:0;border-right:0;border-top:1px solid var(--line);padding:6px 4px calc(6px + env(safe-area-inset-bottom,0px))}
+.brand{display:none}
+nav a,.nav-out{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px;font-size:11px;line-height:1.2;text-align:center;border-radius:10px;margin:0}
+nav i{display:block;font-style:normal;font-size:20px}
+nav .sh{display:block}nav .lg{display:none}
+.nav-out{border:0;background:transparent;color:var(--mute);min-height:0}
+main{padding:18px 16px 100px}
+.g2{grid-template-columns:1fr}
+.stats{gap:8px}.stats div{padding:10px;font-size:13px}.stats b{font-size:21px}
+button,.btn,input,select{min-height:44px}
+input,select{font-size:16px}
+.acts button,.acts .btn{flex:1;text-align:center}
+dialog{width:94vw;padding:16px}
+#sync{bottom:calc(74px + env(safe-area-inset-bottom,0px))}
+#toast{bottom:calc(88px + env(safe-area-inset-bottom,0px))}
+}
 </style></head>
 <body>
 <div class="app"><nav id="nav"></nav><main id="main"><p class="empty">Loading…</p></main></div>
@@ -354,7 +372,7 @@ reports(){
  <div class="card"><h2>Last 7 days</h2>${days.map(d=>`<div class="li"><span style="width:84px">${d[0].slice(5)}</span><div class="bw"><i style="width:${d[1]/mx*100}%"></i></div><b style="width:80px;text-align:right">${money(d[1])}</b></div>`).join('')}</div>
  <div class="g2"><div class="card"><h2>By service</h2>${li(grp(a=>(sv(a.svc)||{name:'Removed'}).name))}</div><div class="card"><h2>By stylist</h2>${li(grp(a=>(sf(a.staff)||{name:'Removed'}).name))}</div></div>`}
 };
-const NAV=[['today','Appointments'],['book','New booking'],['customers','Customers'],['setup','Services and staff'],['reports','Reports']];
+const NAV=[['today','Appointments','📅','Today'],['book','New booking','➕','Book'],['customers','Customers','👥','Clients'],['setup','Services and staff','✂️','Setup'],['reports','Reports','📊','Reports']];
 function render(){
  if(!S)return;
  const role=getRole(),nav=document.getElementById('nav'),main=document.getElementById('main');
@@ -365,7 +383,7 @@ function render(){
  let v=V[location.hash.slice(1)]?location.hash.slice(1):'today';
  if(role==='staff')v='today';
  const items=role==='staff'?NAV.filter(n=>n[0]==='today'):NAV;
- nav.innerHTML=`<div class="brand">${esc(S.shop)}</div>`+items.map(n=>`<a href="#${n[0]}"${n[0]===v?' class="on"':''}>${n[1]}</a>`).join('')+`<button class="nav-out" data-a="logout">Switch role</button>`;
+ nav.innerHTML=`<div class="brand">${esc(S.shop)}</div>`+items.map(n=>`<a href="#${n[0]}"${n[0]===v?' class="on"':''}><i aria-hidden="true">${n[2]}</i><span class="lg">${n[1]}</span><span class="sh">${n[3]}</span></a>`).join('')+`<button class="nav-out" data-a="logout"><i aria-hidden="true">🔄</i><span class="lg">Switch role</span><span class="sh">Switch</span></button>`;
  main.innerHTML=V[v]();ssel='';
  sel='';
 }
