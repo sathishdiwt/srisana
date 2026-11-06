@@ -83,7 +83,7 @@ $('cf').addEventListener('submit',async e=>{
   await api('POST','parlor_customers',[{id:uid(),ord,name,phone:phone||null,nric:nric||null,dob:dob||null,pts:0}],'return=minimal');
   setSt('Saved to Supabase');
   try{sessionStorage.setItem('flash_name',name)}catch(e){}
-  location.href='index.html?done=reg';return;
+  location.href='cust.html?done=reg';return;
  }catch(err){console.error(err);show('Not saved: '+err.message,'bad');setSt('Not saved',1)}
  $('go').disabled=false;
 });
