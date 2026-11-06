@@ -139,7 +139,7 @@ document.addEventListener('submit',async e=>{
   setSt('Saved to Supabase');
   const c=CU.find(x=>x.id===cust);
   try{sessionStorage.setItem('flash_name',c?c.name:'')}catch(e){}
-  location.href='index.html?done=book';return;
+  location.href='cust.html?done=book';return;
  }catch(err){console.error(err);show('Not saved: '+err.message,'bad');setSt('Not saved',1);$('go').disabled=false}
 });
 boot();
