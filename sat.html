@@ -52,8 +52,9 @@ dialog::backdrop{background:rgba(0,0,0,.45)}
 .cb{position:relative;margin-bottom:10px}.cb label{margin-bottom:0}.cl{position:absolute;left:0;right:0;z-index:20;max-height:260px;overflow:auto;background:var(--panel);border:1px solid var(--line);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.18)}.cl[hidden]{display:none}.co{display:flex;justify-content:space-between;gap:10px;width:100%;text-align:left;border:0;border-bottom:1px solid var(--line);border-radius:0;background:transparent;padding:9px 12px}.co:hover,.co:focus{background:var(--tint)}.ch{padding:7px 12px;font-size:12px;font-weight:600;color:var(--mute);background:var(--bg);position:sticky;top:0}
 .ht tfoot td{border-top:2px solid var(--ink);border-bottom:0;padding-top:10px}
 details{border-bottom:1px solid var(--line)}summary{cursor:pointer;padding:10px 0}summary span{color:var(--mute);font-size:13px}
+.login{max-width:360px;margin:60px auto;text-align:center}.login .card{display:grid;gap:10px;text-align:left;margin-top:14px}.login button{padding:12px;text-align:center}.nav-out{margin-top:auto}
 @media print{.app,#toast,#sync,.noprint{display:none!important}dialog{position:static;border:0;width:100%;color:#000;background:#fff}}
-@media(max-width:700px){.app{grid-template-columns:1fr}nav{flex-direction:row;overflow-x:auto;border-right:0;border-bottom:1px solid var(--line);padding:10px}.brand{display:none}nav a{white-space:nowrap}main{padding:18px}.g2{grid-template-columns:1fr}}
+@media(max-width:700px){.app{grid-template-columns:1fr}nav{flex-direction:row;overflow-x:auto;border-right:0;border-bottom:1px solid var(--line);padding:10px}.brand{display:none}nav a{white-space:nowrap}main{padding:18px}.g2{grid-template-columns:1fr}.nav-out{margin-top:0;white-space:nowrap}}
 </style></head>
 <body>
 <div class="app"><nav id="nav"></nav><main id="main"><p class="empty">Loading…</p></main></div>
@@ -69,6 +70,10 @@ const uid=()=>Math.random().toString(36).slice(2,9);
 const ymd=d=>d.toLocaleDateString('en-CA');
 const money=n=>'$'+Number(n).toFixed(2);
 let S=null,D=ymd(new Date()),cur=null,sel='',ssel='';
+/* ---------- Role (Staff / Admin) ---------- */
+const ADMIN_PW='sat';
+const getRole=()=>{try{return sessionStorage.getItem('parlor_role')||''}catch(e){return window.__role||''}};
+const setRole=r=>{try{r?sessionStorage.setItem('parlor_role',r):sessionStorage.removeItem('parlor_role')}catch(e){}window.__role=r};
 
 /* ---------- Supabase layer ---------- */
 const COLS={settings:['id','shop','phone','addr','open'],services:['id','ord','cat','name','price','pp','enq','mins'],staff:['id','ord','name'],customers:['id','ord','name','phone','nric','dob','pts'],appts:['id','ord','date','time','cust','svc','staff','st','total','amt','red','pm','inv'],expenses:['id','ord','date','descr','amt','mode']};
@@ -251,7 +256,7 @@ async function boot(){
   ready=true;setSt('Saved to Supabase');render()
  }catch(e){console.error(e);clearTimeout(timer);S=null;ready=false;setSt('Cannot reach Supabase',1);m.innerHTML=`<div class="card"><h2>Could not connect</h2><p>${esc(e.message)}</p><p style="color:var(--mute)">Check the URL and key, that supabase-schema.sql was run, and your internet connection.</p><button class="pri" id="retry">Try again</button></div>`}}
 async function refresh(){
- if(!ready||busy||pend||document.getElementById('dlg').open)return;
+ if(!ready||busy||pend||!getRole()||document.getElementById('dlg').open)return;
  try{const s=await load();if(s&&!pend){S=s;takeSnap();render()}}catch(e){}}
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh()});
 document.addEventListener('click',e=>{if(e.target.id==='retry')boot()});
@@ -318,7 +323,7 @@ today(){
  const rev=L.filter(a=>a.st==='paid').reduce((t,a)=>t+a.total,0);
  return `<div class="bar"><h1>Appointments</h1><input type="date" id="dt" value="${D}" style="width:auto" aria-label="Date"></div>
  <div class="stats"><div><b>${L.length}</b>booked</div><div><b>${L.filter(a=>a.st!=='paid').length}</b>still to go</div><div><b>${money(rev)}</b>collected</div></div>
- ${L.length?L.map(row).join(''):'<p class="empty">No appointments on this day. <a href="#book">Book the first one</a></p>'}`},
+ ${L.length?L.map(row).join(''):'<p class="empty">No appointments on this day.'+(getRole()==='admin'?' <a href="#book">Book the first one</a>':'')+'</p>'}`},
 book(){
  return `<div class="bar"><h1>New booking</h1></div><form id="bf" class="card">
  <div class="cb"><label>Customer: click to choose from the list, or type name, phone or NRIC<input id="bq" autocomplete="off" placeholder="Click to choose or type to search"></label><div id="br" class="cl" hidden></div></div><div id="bx"></div>
@@ -352,9 +357,16 @@ reports(){
 const NAV=[['today','Appointments'],['book','New booking'],['customers','Customers'],['setup','Services and staff'],['reports','Reports']];
 function render(){
  if(!S)return;
- const v=V[location.hash.slice(1)]?location.hash.slice(1):'today';
- document.getElementById('nav').innerHTML=`<div class="brand">${esc(S.shop)}</div>`+NAV.map(n=>`<a href="#${n[0]}"${n[0]===v?' class="on"':''}>${n[1]}</a>`).join('');
- document.getElementById('main').innerHTML=V[v]();ssel='';
+ const role=getRole(),nav=document.getElementById('nav'),main=document.getElementById('main');
+ if(!role){
+  nav.innerHTML='';
+  main.innerHTML=`<div class="login"><h1>${esc(S.shop)}</h1><p style="color:var(--mute)">Who is using the desk?</p><div class="card"><button class="pri" data-a="rstaff">Staff</button><button data-a="radmin">Admin</button></div><div id="apw"></div></div>`;
+  return}
+ let v=V[location.hash.slice(1)]?location.hash.slice(1):'today';
+ if(role==='staff')v='today';
+ const items=role==='staff'?NAV.filter(n=>n[0]==='today'):NAV;
+ nav.innerHTML=`<div class="brand">${esc(S.shop)}</div>`+items.map(n=>`<a href="#${n[0]}"${n[0]===v?' class="on"':''}>${n[1]}</a>`).join('')+`<button class="nav-out" data-a="logout">Switch role</button>`;
+ main.innerHTML=V[v]();ssel='';
  sel='';
 }
 function openBill(id){
@@ -395,6 +407,9 @@ document.getElementById('dlg').addEventListener('input',calc);
 document.addEventListener('click',e=>{
  const b=e.target.closest('[data-a]');if(!b||!S)return;
  const a=b.dataset.a,id=b.dataset.id,ap=S.appts.find(x=>x.id===id);
+ if(a==='rstaff'){setRole('staff');location.hash='today';render();return}
+ if(a==='radmin'){document.getElementById('apw').innerHTML='<form id="lf" class="card"><label>Admin password<input id="lp" type="password" autocomplete="current-password"></label><button class="pri" type="submit">Enter</button></form>';document.getElementById('lp').focus();return}
+ if(a==='logout'){setRole('');document.getElementById('dlg').open&&document.getElementById('dlg').close();render();return}
  if(a==='in'||a==='svc'){ap.st=a;save();render()}
  else if(a==='bill')openBill(id);
  else if(a==='inv')openInv(id);
@@ -417,6 +432,7 @@ document.addEventListener('click',e=>{
 document.addEventListener('change',e=>{if(!S)return;if(e.target.id==='dt'){D=e.target.value||D;render()}if(e.target.id==='sn'){S.shop=e.target.value.trim()||'Sri Sana';save();render()}if(e.target.id==='sp'){S.phone=e.target.value.trim();save()}if(e.target.id==='sa'){S.addr=e.target.value.trim();save()}});
 document.addEventListener('submit',e=>{
  e.preventDefault();if(!S)return;const f=e.target.id,g=i=>document.getElementById(i).value.trim();
+ if(f==='lf'){if(g('lp')===ADMIN_PW){setRole('admin');location.hash='today';render()}else{toast('Wrong password');document.getElementById('lp').value=''}return}
  if(f==='bf'){
   if(!ssel){toast('Choose a service first');return}let cid=sel;
   if(!cid){if(!g('bn')){toast('Enter the customer’s name');return}
