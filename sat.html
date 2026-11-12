@@ -94,7 +94,10 @@ const getRole=()=>{try{return sessionStorage.getItem('parlor_role')||''}catch(e)
 const setRole=r=>{try{r?sessionStorage.setItem('parlor_role',r):sessionStorage.removeItem('parlor_role')}catch(e){}window.__role=r};
 
 /* ---------- Supabase layer ---------- */
-const COLS={settings:['id','shop','phone','addr','open'],services:['id','ord','cat','name','price','pp','enq','mins'],staff:['id','ord','name'],customers:['id','ord','name','phone','nric','dob','pts'],appts:['id','ord','date','time','cust','svc','staff','st','total','amt','red','pm','inv'],expenses:['id','ord','date','descr','amt','mode']};
+/* NOTE: appts now has t0 (service start) and t1 (service stop), both epoch milliseconds (bigint).
+   Run once in Supabase SQL Editor:
+   alter table parlor_appts add column if not exists t0 bigint, add column if not exists t1 bigint; */
+const COLS={settings:['id','shop','phone','addr','open'],services:['id','ord','cat','name','price','pp','enq','mins'],staff:['id','ord','name'],customers:['id','ord','name','phone','nric','dob','pts'],appts:['id','ord','date','time','cust','svc','staff','st','total','amt','red','pm','inv','t0','t1'],expenses:['id','ord','date','descr','amt','mode']};
 const TB=Object.keys(COLS);
 let snap={},timer=null,busy=false,again=false,pend=false,ready=false;
 const setSt=(m,bad)=>{const e=document.getElementById('sync');e.textContent=m;e.className=bad?'bad':''};
@@ -285,6 +288,11 @@ const cu=i=>S.customers.find(x=>x.id===i),sv=i=>S.services.find(x=>x.id===i),sf=
 const toast=m=>{const t=document.getElementById('toast');t.textContent=m;t.classList.add('on');setTimeout(()=>t.classList.remove('on'),1800)};
 const wa=(p,t)=>{p=String(p||'').replace(/\D/g,'');if(p.length===8)p='65'+p;return'https://wa.me/'+p+'?text='+encodeURIComponent(t)};
 const ST={booked:'Booked',in:'Checked in',svc:'In service',paid:'Paid'};
+/* ---------- service time tracking ---------- */
+const hm=t=>new Date(t).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+const dur=(a,b)=>{const m=Math.max(0,Math.floor((b-a)/60000));return m<60?m+' min':Math.floor(m/60)+' hr '+(m%60)+' min'};
+const durTxt=a=>!a.t0?'':a.t1?hm(a.t0)+' – '+hm(a.t1)+' · '+dur(a.t0,a.t1):'Started '+hm(a.t0)+' · <span class="dur" data-t0="'+a.t0+'">'+dur(a.t0,Date.now())+'</span>';
+setInterval(()=>document.querySelectorAll('.dur[data-t0]').forEach(e=>e.textContent=dur(+e.dataset.t0,Date.now())),20000);
 const NX={booked:['Check in','in'],in:['Start service','svc'],svc:['Finish and bill','bill']};
 const opts=(a,sel)=>a.map(x=>`<option value="${x.id}"${x.id===sel?' selected':''}>${esc(x.name)}</option>`).join('');
 const visits=c=>S.appts.filter(a=>a.cust===c.id&&a.st==='paid');
@@ -329,7 +337,7 @@ function row(a){
  const rem=wa(ph,msgRem(a));
  const rec=wa(ph,msgInv(a));
  return `<div class="row"><div class="tm">${esc(a.time)}</div>
- <div class="who"><b>${esc(c?c.name:'Deleted customer')}</b><span>${esc(s?s.name:'Service removed')} with ${esc(f?f.name:'no one')}</span></div>
+ <div class="who"><b>${esc(c?c.name:'Deleted customer')}</b><span>${esc(s?s.name:'Service removed')} with ${esc(f?f.name:'no one')}</span>${a.t0?`<span style="display:block">⏱ ${durTxt(a)}</span>`:''}</div>
  <span class="chip ${a.st}">${ST[a.st]}${a.st==='paid'?' '+money(a.total):''}</span>
  <div class="acts">${n?`<button class="pri" data-a="${n[1]}" data-id="${a.id}">${n[0]}</button>`:`<button class="pri" data-a="inv" data-id="${a.id}">View invoice</button><a class="btn" href="${rec}" target="_blank" rel="noopener">Send on WhatsApp</a>`}
  ${a.st==='booked'?`<a class="btn" href="${rem}" target="_blank" rel="noopener">Send reminder</a>`:''}
@@ -390,6 +398,7 @@ function render(){
 function openBill(id){
  const a=S.appts.find(x=>x.id===id),c=cu(a.cust),s=sv(a.svc);cur=id;
  document.getElementById('dlg').innerHTML=`<h2>Bill ${esc(c?c.name:'customer')}</h2><p style="color:var(--mute);margin-top:0">${esc(s?s.name:'Service')}</p>
+ ${a.t0&&a.t1?`<p style="color:var(--mute);margin:-4px 0 10px;font-size:13px">⏱ Service time: ${hm(a.t0)} – ${hm(a.t1)} (${dur(a.t0,a.t1)})</p>`:''}
  <label>Amount (SGD)<input id="amt" type="number" step="0.01" min="0" value="${s&&!s.enq?s.price:''}" placeholder="Enter amount"></label>${s&&s.pp?`<p style="color:var(--mute);font-size:13px;margin:-4px 0 10px">Listed as ${money(s.price)}++. Edit the amount if you add service charge and GST.</p>`:''}
  ${c&&c.pts>=100?`<label class="chk"><input type="checkbox" id="red"> Use 100 points for $5 off (${c.pts} available)</label>`:''}
  <label>Payment method<select id="pm"><option>Cash</option><option>PayNow</option><option>Card</option></select></label>
@@ -406,6 +415,7 @@ function openInv(id){
  <tr><td>${esc(s?s.name:'Service')}</td><td>${money(amt)}</td></tr>
  ${red?`<tr><td>Points discount (100 points)</td><td>-${money(red)}</td></tr>`:''}
  </tbody><tfoot><tr><td>Total paid</td><td>${money(a.total)}</td></tr></tfoot></table>
+ ${a.t0&&a.t1?`<p class="pts">Service time: ${hm(a.t0)} – ${hm(a.t1)} (${dur(a.t0,a.t1)})</p>`:''}
  <p class="pts">Points earned ${Math.floor(a.total)} · Balance ${c?c.pts:0}</p>
  <p class="thanks">Thank you for choosing ${esc(S.shop)}.</p></div>
  <div class="acts noprint"><button data-a="close">Close</button><button data-a="print">Print</button><a class="btn" href="${wa(c&&c.phone,msgInv(a))}" target="_blank" rel="noopener">Send on WhatsApp</a></div>`;
@@ -416,7 +426,7 @@ function openHist(id){
  document.getElementById('dlg').innerHTML=`<h2>${esc(c.name)}</h2><p style="color:var(--mute);margin-top:0">${esc(c.phone||'No phone')} · ${esc(mask(c.nric)||'No NRIC')}</p>
  <label>Date of birth (optional)<input type="date" id="hd" value="${esc(c.dob||'')}"></label>
  <div class="stats"><div><b>${P.length}</b>visits</div><div><b>${money(P.reduce((t,a)=>t+a.total,0))}</b>spent</div><div><b>${c.pts}</b>points</div></div>
- ${L.length?`<table class="ht"><thead><tr><th>Date</th><th>Service</th><th>Amount</th></tr></thead><tbody>${L.map(a=>{const s=sv(a.svc),f=sf(a.staff);return `<tr><td>${fd(a.date)}<br><span>${esc(a.time)}</span></td><td>${esc(s?s.name:'Service removed')}<br><span>${esc(f?f.name:'-')}${a.st!=='paid'?' · '+ST[a.st]:''}</span></td><td>${a.st==='paid'?money(a.total):'-'}</td></tr>`}).join('')}</tbody></table>`:'<p class="empty">No visits yet.</p>'}
+ ${L.length?`<table class="ht"><thead><tr><th>Date</th><th>Service</th><th>Amount</th></tr></thead><tbody>${L.map(a=>{const s=sv(a.svc),f=sf(a.staff);return `<tr><td>${fd(a.date)}<br><span>${esc(a.time)}</span></td><td>${esc(s?s.name:'Service removed')}<br><span>${esc(f?f.name:'-')}${a.st!=='paid'?' · '+ST[a.st]:''}${a.t0&&a.t1?' · '+dur(a.t0,a.t1):''}</span></td><td>${a.st==='paid'?money(a.total):'-'}</td></tr>`}).join('')}</tbody></table>`:'<p class="empty">No visits yet.</p>'}
  <div class="acts" style="margin-top:12px"><button data-a="close">Close</button></div>`;
  document.getElementById('dlg').showModal();
 }
@@ -428,8 +438,8 @@ document.addEventListener('click',e=>{
  if(a==='rstaff'){setRole('staff');location.hash='today';render();return}
  if(a==='radmin'){document.getElementById('apw').innerHTML='<form id="lf" class="card"><label>Admin password<input id="lp" type="password" autocomplete="current-password"></label><button class="pri" type="submit">Enter</button></form>';document.getElementById('lp').focus();return}
  if(a==='logout'){setRole('');document.getElementById('dlg').open&&document.getElementById('dlg').close();render();return}
- if(a==='in'||a==='svc'){ap.st=a;save();render()}
- else if(a==='bill')openBill(id);
+ if(a==='in'||a==='svc'){ap.st=a;if(a==='svc'){ap.t0=Date.now();ap.t1=null}save();render()}
+ else if(a==='bill'){ap.t1=Date.now();save();render();openBill(id)}
  else if(a==='inv')openInv(id);
  else if(a==='hist')openHist(id);
  else if(a==='dele'){S.exp=(S.exp||[]).filter(x=>x.id!==id);save();render()}
@@ -438,6 +448,7 @@ document.addEventListener('click',e=>{
  else if(a==='close')document.getElementById('dlg').close();
  else if(a==='pay'){const ap2=S.appts.find(x=>x.id===cur),c=cu(ap2.cust),r=document.getElementById('red'),t=calc();if(!(parseFloat(document.getElementById('amt').value)>0)){toast('Enter the amount to bill');return}
   if(c){if(r&&r.checked)c.pts-=100;c.pts+=Math.floor(t)}
+  if(!ap2.t1)ap2.t1=Date.now();
   ap2.amt=parseFloat(document.getElementById('amt').value)||0;ap2.red=r&&r.checked?5:0;ap2.inv='INV-'+String(S.appts.filter(x=>x.st==='paid').length+1).padStart(4,'0');ap2.total=t;ap2.pm=document.getElementById('pm').value;ap2.st='paid';save();document.getElementById('dlg').close();render();openInv(ap2.id);toast('Payment saved')}
  else if(a==='del'){S.appts=S.appts.filter(x=>x.id!==id);save();render();toast('Booking cancelled')}
  else if(a==='delc'){S.customers=S.customers.filter(x=>x.id!==id);save();render()}
